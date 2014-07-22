@@ -1,3 +1,25 @@
+## Configuring a Heroku App
+
+In order to use this buildpack in addition to a standard buildpack such
+as node, we need to use the multi buildpack
+
+### New App
+
+    heroku apps:create build-gm -buildpack https://github.com/ddollar/heroku-buildpack-multi.git
+
+### Update an Existing App
+
+    heroku config:set BUILDPACK_URL=https://github.com/ddollar/heroku-buildpack-multi.git
+
+### Buildpack configuration file
+
+A buildpack configuration file .buildpacks needs to be added to the project
+
+.buildpacks
+
+    https://github.com/long/buildpack-custom-graphicsmagick.git
+    https://github.com/heroku/heroku-buildpack-nodejs.git
+
 ## Build
 
 Libraries and executables for GraphicsMagick and supporting libraries
@@ -46,4 +68,18 @@ yasm 1.2.0
 libjpeg-turbo 1.3.1  
 lcms2 2.4  
 GraphicsMagick 1.3.18
+
+# Building on Heroku
+
+This project should be installed on Heroku using the null buildpack in order 
+to pre-build the libraries and executables
+
+    heroku apps:create build-gm -buildpack http://github.com/ryandotsmith/null-buildpack.git
+    heroku run bash
+
+    build/build_all /tmp/vendor_build /tmp/vendor \
+    https://s3.amazonaws.com/buildpacks.rayburst.com/custom-graphicsmagick/src \
+    buildpacks.rayburst.com custom-graphicsmagick/vendor \
+    [AWS KEY] [AWS SECRET]
+
 
