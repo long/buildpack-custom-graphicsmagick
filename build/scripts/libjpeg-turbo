@@ -1,0 +1,47 @@
+#!/bin/bash
+
+TGZ=libjpeg-turbo-1.3.1.tar.gz
+PRODUCT=libjpeg-turbo
+REQUIRES='yasm zlib'
+
+set -e
+
+CUSTOM_BUILD_ROOT=`cd $(dirname $0); cd ..; pwd`
+
+BUILD_DIR=$1
+VENDOR_DIR=$2
+SRC_URL_BASE=$3
+S3_BUCKET=$4
+S3_BASE=$5
+
+PATH=${CUSTOM_BUILD_ROOT}/bin:$PATH
+
+for DEP in $REQUIRES; do
+  PATH=${VENDOR_DIR}/${DEP}/bin:$PATH
+  LD_LIBRARY_PATH=${VENDOR_DIR}/${DEP}/lib:$LD_LIBRARY_PATH
+
+  export CPPFLAGS="-I${VENDOR_DIR}/${DEP}/include ${CPPFLAGS}"
+  export LDFLAGS="-L${VENDOR_DIR}/${DEP}/lib ${LDFLAGS}"
+done
+
+export PATH LD_LIBRARY_PATH CPPFLAGS LDFLAGS
+
+mkdir -p ${BUILD_DIR}
+mkdir -p ${VENDOR_DIR}/${PRODUCT}
+
+cd ${BUILD_DIR}
+
+echo "BUILDING ${PRODUCT} using ${SRC_URL_BASE}/${TGZ}"
+
+SRC_DIR=`curl ${SRC_URL_BASE}/${TGZ} -s -o - | tar xzvf - | cut -d '/' -f 1 | sort -u`
+cd $SRC_DIR
+./configure --prefix=${VENDOR_DIR}/${PRODUCT}
+make && make install
+
+cd ${VENDOR_DIR}/${PRODUCT}
+tar czvf ../${PRODUCT}.tgz .
+
+if [ ! -z "${S3_BUCKET}" ]; then
+  echo "UPLOADING ${PRODUCT}.tgz to ${S3_BUCKET}:${S3_BASE}/"
+  s3 put ${S3_BUCKET} ${S3_BASE}/${PRODUCT}.tgz ${VENDOR_DIR}/${PRODUCT}.tgz
+fi

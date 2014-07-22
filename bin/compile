@@ -1,0 +1,50 @@
+#!/bin/bash
+
+set -e
+
+BUILDPACK_ROOT=`cd $(dirname $0); cd ..; pwd`
+
+. ${BUILDPACK_ROOT}/buildpack_config
+
+BUILD_DIR=$1
+CACHE_DIR=$2
+
+indent() {
+  sed -u 's/^/       /'
+}
+
+arrow() {
+  sed -u 's/^/-----> /'
+}
+
+PACKAGES_BIN_PATH=""
+PACKAGES_LD_LIBRARY_PATH=""
+
+echo "Installing ${MAIN_PACKAGE}" | arrow
+echo "Installing pre-built libraries and executables" | arrow
+for PACKAGE in $PACKAGES; do
+  INSTALL_VERSION=`grep ${PACKAGE} ${BUILDPACK_ROOT}/package_versions`
+  echo "${INSTALL_VERSION}" | indent
+  echo "${VENDOR_PACKAGE_BASE}/${PACKAGE}.tgz -> ${BUILD_DIR}/vendor/${PACKAGE}" | indent
+  mkdir -p ${BUILD_DIR}/vendor/${PACKAGE}
+  curl ${VENDOR_PACKAGE_BASE}/${PACKAGE}.tgz -s -o - | tar xzf - -C ${BUILD_DIR}/vendor/${PACKAGE}
+
+  if [ -z "${PACKAGES_BIN_PATH}" ]; then
+    PACKAGES_BIN_PATH="\$HOME/vendor/${PACKAGE}/bin"
+  else
+    PACKAGES_BIN_PATH="\$HOME/vendor/${PACKAGE}/bin:${PACKAGES_BIN_PATH}"
+  fi
+
+  if [ -z "${PACKAGES_LD_LIBRARY_PATH}" ]; then
+    PACKAGES_LD_LIBRARY_PATH="\$HOME/vendor/${PACKAGE}/lib"
+  else
+    PACKAGES_LD_LIBRARY_PATH="\$HOME/vendor/${PACKAGE}/lib:${PACKAGES_LD_LIBRARY_PATH}"
+  fi
+done
+
+echo "Building runtime for ${MAIN_PACKAGE}" | arrow
+mkdir -p ${BUILD_DIR}/.profile.d
+cat << EOPD > ${BUILD_DIR}/.profile.d/${MAIN_PACKAGE}.sh
+export PATH=${PACKAGES_BIN_PATH}:\$HOME/bin:\$PATH
+export LD_LIBRARY_PATH=${PACKAGES_LD_LIBRARY_PATH}:\$LD_LIBRARY_PATH
+EOPD
