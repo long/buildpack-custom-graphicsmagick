@@ -39,10 +39,11 @@ s3://buildpacks.rayburst.com/custom-graphicsmagick/vendor
 
 ### Versions
 
-zlib 1.2.8
-libpng 1.5.17
-tiff 4.0.3
-yasm 1.2.0
-libjpeg-turbo 1.3.1
-lcms2 2.4
+zlib 1.2.8  
+libpng 1.5.17  
+tiff 4.0.3  
+yasm 1.2.0  
+libjpeg-turbo 1.3.1  
+lcms2 2.4  
 GraphicsMagick 1.3.18
+
