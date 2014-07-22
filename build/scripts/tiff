@@ -13,6 +13,8 @@ VENDOR_DIR=$2
 SRC_URL_BASE=$3
 S3_BUCKET=$4
 S3_BASE=$5
+AWS_ID=$6
+AWS_SECRET=$7
 
 PATH=${CUSTOM_BUILD_ROOT}/bin:$PATH
 
@@ -40,6 +42,10 @@ make && make install
 
 cd ${VENDOR_DIR}/${PRODUCT}
 tar czvf ../${PRODUCT}.tgz .
+
+if [ ! -z "${AWS_ID}" ]; then
+  export AWS_ID AWS_SECRET
+fi
 
 if [ ! -z "${S3_BUCKET}" ]; then
   echo "UPLOADING ${PRODUCT}.tgz to ${S3_BUCKET}:${S3_BASE}/"
