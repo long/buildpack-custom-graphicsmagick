@@ -1,0 +1,10 @@
+{
+  "name": "flag-api"
+  , "version": "0.0.1"
+  , "dependencies": {
+      "gm": "1.16.0"
+  },
+  "engines": {
+    "node": "0.10.28"
+  }
+}
